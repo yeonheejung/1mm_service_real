@@ -19,7 +19,8 @@ var donation = require('./routes/donation');
 var report = require('./routes/report');
 var auth = require('./routes/auth');
 var pay = require('./routes/pay');
-var avs = require('./routes/avs');
+var useravs = require('./routes/useravs');
+var answeravs = require('./routes/answeravs');
 
 var app = express();
 
@@ -51,10 +52,11 @@ app.use('/uservoices', express.static(path.join(__dirname, 'uploads/user/voices'
 app.use('/userphotos', express.static(path.join(__dirname, 'uploads/user/photos')));
 app.use('/donationphotos', express.static(path.join(__dirname, 'uploads/donation/photos')));
 app.use('/answervoices', express.static(path.join(__dirname, 'uploads/answer/voices')));
-app.use('/avs', avs);
+
 
 app.use(require('./routes/common').isAuthenticated); //모든 요청이 있는 곳에 인증을 요구
-
+app.use('/useravs', useravs);
+app.use('/answeravs', answeravs);
 app.use('/answers', answer);
 app.use('/questions', question);
 app.use('/users', user);

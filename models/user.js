@@ -101,14 +101,14 @@ function searchRecommend(callback) {
 
 function checkNickname(nickname, callback) {
 
-    var sql_search_ninkname = 'select nickname from user where nickname = ?';
+    var sql_search_nickname = 'select nickname from user where nickname = ?';
 
     dbPool.logStatus();
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
         }
-        dbConn.query(sql_search_ninkname, [nickname], function (err, results) {
+        dbConn.query(sql_search_nickname, [nickname], function (err, results) {
             dbConn.release();
             dbPool.logStatus();
             if (err) {
@@ -159,8 +159,8 @@ function showMyInfo(id, callback) {
                         return callback(err);
                     }
                     var userphotos = process.env.HTTP_HOST + "/userphotos/";
-                    var uservoiceMessage = process.env.HTTP_HOST + "/avs/";
-                    results[0].voiceMessage = uservoiceMessage + results[0].voiceMessage;
+                   // var uservoiceMessage = process.env.HTTP_HOST + "/avs/";
+                   // results[0].voiceMessage = uservoiceMessage + results[0].voiceMessage;
                     results[0].photo = userphotos + results[0].photo;
                     results[0].following = following;
                     results[0].follower = follower;
@@ -1386,7 +1386,7 @@ function streamingMyProfile(id, callback) {
             }
             var filename =results[0].voiceMessage;
             console.log(filename);
-            results[0].fileurl = url.resolve('http://127.0.0.1:80', '/avs/' +filename);
+            results[0].fileurl = url.resolve('http://127.0.0.1:80', '/useravs/' +filename);
             callback(null, results[0]);
         })
     })
@@ -1409,7 +1409,7 @@ function streamingYourProfile(uid, callback) {
             }
             var filename =results[0].voiceMessage;
             console.log(filename);
-            results[0].fileurl = url.resolve('http://127.0.0.1:80', '/avs/' +filename);
+            results[0].fileurl = url.resolve('http://127.0.0.1:80', '/useravs/' +filename);
             callback(null, results[0]);
         })
     })
