@@ -2,7 +2,6 @@ var async = require('async');
 var fs = require('fs');
 var path = require('path');
 var dbPool = require('../common/dbpool');
-var path = require('path');
 var url = require('url');
 
 // 유저가 존재하는지 찾는 함수
