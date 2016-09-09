@@ -5,7 +5,6 @@ var url = require('url');
 
 function registerAnswer(newAnswer, callback) {
 
-    console.log(newAnswer);
     dbPool.logStatus();
     dbPool.getConnection(function (err, dbConn) {
         dbConn.beginTransaction(function (err) {
@@ -24,6 +23,7 @@ function registerAnswer(newAnswer, callback) {
 
                 dbConn.commit(function () {
                     dbConn.release();
+                    dbPool.logStatus();
                     callback(null);
                 });
             });
@@ -45,8 +45,8 @@ function registerAnswer(newAnswer, callback) {
                 'update user ' +
                 'set question_cost = question_cost + ((select price from question where id = ?) * 0.4) ' +
                 'where id = (select answerner_id ' +
-                            'from question ' +
-                            'where id = ?) ';
+                'from question ' +
+                'where id = ?) ';
 
             dbConn.query(sql_insert_qCost, [newAnswer.questionId, newAnswer.questionId], function (err, result) {
                 if (err) {
@@ -95,7 +95,7 @@ function streamingAnswer(id, aid, callback) {
                 return callback(null, null);
             }
             var filename =results[0].voiceContent;
-            results[0].fileurl = url.resolve('http://127.0.0.1:80', '/avs/' +filename);
+            results[0].fileurl = url.resolve(process.env.HTTP_HOST, '/answeravs/' +filename);
             callback(null, results[0]);
         });
     })

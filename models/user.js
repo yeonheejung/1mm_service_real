@@ -86,6 +86,8 @@ function searchRecommend(callback) {
     dbPool.logStatus();
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
+            dbConn.release();
+            dbPool.logStatus();
             return callback(err);
         }
         dbConn.query(sql, function (err, results) {
@@ -99,8 +101,8 @@ function searchRecommend(callback) {
     });
 }
 
+// id 중복 체크
 function checkNickname(nickname, callback) {
-
     var sql_search_nickname = 'select nickname from user where nickname = ?';
 
     dbPool.logStatus();
@@ -134,6 +136,7 @@ function showMyInfo(id, callback) {
 
     var following = 0;
     var follower = 0;
+
     dbPool.logStatus();
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
@@ -142,25 +145,31 @@ function showMyInfo(id, callback) {
 
         dbConn.beginTransaction(function (err) {
             if (err) {
+                dbConn.release();
+                dbPool.logStatus();
                 return callback(err);
             }
             // 파일을 전송 해줄때 내 파일 저장 경로를 같이 붙여서 뿌려줌
             dbConn.query(sql, [id], function (err, results) {
                 if (err) {
+                    dbConn.release();
+                    dbPool.logStatus();
                     return callback(err);
                 }
 
                 if (results.length === 0) {
+                    dbConn.release();
+                    dbPool.logStatus();
                     return callback(err, results);
                 }
 
                 async.series([searchFollowing, searchFollower], function (err) {
+                    dbConn.release();
+                    dbPool.logStatus();
                     if (err) {
                         return callback(err);
                     }
                     var userphotos = process.env.HTTP_HOST + "/userphotos/";
-                   // var uservoiceMessage = process.env.HTTP_HOST + "/avs/";
-                   // results[0].voiceMessage = uservoiceMessage + results[0].voiceMessage;
                     results[0].photo = userphotos + results[0].photo;
                     results[0].following = following;
                     results[0].follower = follower;
@@ -213,6 +222,7 @@ function showYourInfo(myId, yourId, callback) {
     var followInfo; //상대방이 내가 팔로잉 했는 사람인지 아닌지 알기 위한 변수
     var following = 0;
     var follower = 0;
+
     dbPool.logStatus();
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
@@ -223,21 +233,28 @@ function showYourInfo(myId, yourId, callback) {
         async.series([followCheck], function (err) {
 
             if (err) {
+                dbConn.release();
+                dbPool.logStatus();
                 return callback(err);
             }
             dbConn.query(sql, [yourId], function (err, results) {
-                dbConn.release();
-                dbPool.logStatus();
+
                 if (err) {
+                    dbConn.release();
+                    dbPool.logStatus();
                     return callback(err);
                 }
 
                 if (results.length === 0) {
+                    dbConn.release();
+                    dbPool.logStatus();
                     return callback(err, results);
                 }
                 var userphotos = process.env.HTTP_HOST + "/userphotos/";
 
                 async.series([searchFollowing, searchFollower], function (err) {
+                    dbConn.release();
+                    dbPool.logStatus();
                     if (err) {
                         return callback(err);
                     }
@@ -370,7 +387,6 @@ function donationRank(callback) {
                 if (err) {
                     return callback(err);
                 }
-                console.log(results);
                 callback(null, results);
             });
         });
@@ -588,6 +604,7 @@ function deletePhoto(id, callback) {
         'update user ' +
         'set photo = null ' +
         'where id = ?';
+
     dbPool.logStatus();
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
@@ -657,6 +674,7 @@ function deletePhoto(id, callback) {
     });
 }
 
+// 프로필 기부처 수정
 function updateDonation(id, donationId, callback) {
     var sql_update_donation =
         'update user ' +
@@ -723,16 +741,17 @@ function registerFollow(myId, yourId, callback) {
         }
 
         if (yourId instanceof Array) {
-
+            var idArr = [];
             async.each(yourId, function (item, done) {
-                parseInt(item, 10);
+                idArr.push(parseInt(item, 10));
                 done(null);
+
             }, function (err) {
                 if (err) {
                     return callback(err);
                 }
 
-                async.each(yourId, function (item, done) {
+                async.each(idArr, function (item, done) {
                     dbConn.query(sql, [myId, item], function (err, result) {
                         if (err) {
                             return done(err);
@@ -761,7 +780,7 @@ function registerFollow(myId, yourId, callback) {
     });
 }
 
-// 팔로우 취소
+// 팔로우 끊기
 function cancleFollow(follow, callback) {
     var sql = 'DELETE FROM following WHERE user_id = ? and following_id = ? ';
     dbPool.logStatus();
@@ -797,9 +816,9 @@ function showMySendQuestions(id, answer, pageNo, count, callback) {
         'join user us on(q.answerner_id = us.id) ' +
         'where q.questioner_id = ? ' +
         'limit ?, ?';
+
     dbPool.logStatus();
     dbPool.getConnection(function (err, dbConn) {
-
         if (answer === 0) {
             dbConn.query(sql_incomplete_answer, [id, (pageNo - 1) * count, count], function (err, results) {
                 dbConn.release();
@@ -807,7 +826,6 @@ function showMySendQuestions(id, answer, pageNo, count, callback) {
                 if (err) {
                     return callback(err);
                 }
-
                 // 파일을 전송 해줄때 내 파일 저장 경로를 같이 붙여서 뿌려줌
                 var userphotos = process.env.HTTP_HOST + "/userphotos/";
 
@@ -818,7 +836,6 @@ function showMySendQuestions(id, answer, pageNo, count, callback) {
                     if (err) {
                         return callback(err);
                     }
-                    console.log(results);
                     callback(null, results);
                 });
             });
@@ -842,7 +859,6 @@ function showMySendQuestions(id, answer, pageNo, count, callback) {
                     if (err) {
                         return callback(err);
                     }
-                    console.log(results);
                     callback(null, results);
                 });
             });
@@ -867,6 +883,7 @@ function showMyReceiveQuestions(id, answer, pageNo, count, callback) {
         'join user us on(q.answerner_id = us.id) ' +
         'where q.answerner_id = ? ' +
         'limit ?, ?';
+
     dbPool.logStatus();
     dbPool.getConnection(function (err, dbConn) {
         if (answer === 0) {
@@ -951,8 +968,7 @@ function showMyFollowing(id, pageNo, count, callback) {
     });
 }
 
-// 내 팔로워 목록 조회
-
+// 내 팔로우 목록
 function showMyFollower(id, pageNo, count, callback) {
 
     var sql_myFollowerList =
@@ -978,6 +994,7 @@ function showMyFollower(id, pageNo, count, callback) {
         dbConn.query(sql_myFollowerList, [id, id, id, (pageNo - 1) * count, count], function (err, results) {
             dbConn.release();
             dbPool.logStatus();
+
             if (err) {
                 return callback(err);
             }
@@ -1010,7 +1027,7 @@ function showMyFollower(id, pageNo, count, callback) {
 }
 
 
-// TODO: 상대방 팔로잉 목록
+// 상대방 팔로우 목록
 function showYourFollowing(myId, yourId, pageNo, count, callback) {
     var sql =
         'SELECT f.following_id userId, u.photo, u.nickname, u.name, u.celebrity, f.distance ' +
@@ -1034,7 +1051,7 @@ function showYourFollowing(myId, yourId, pageNo, count, callback) {
     });
 }
 
-// 상대방 팔로워 목록
+// 상대방 팔로우 목록
 function showYourFollower(myId, yourId, pageNo, count, callback) {
     var sql_yourFollowerList =
         'select c.userId, c.photo, c.nickname, c.name, c.celebrity, b.myfollowing followInfo ' +
@@ -1319,7 +1336,7 @@ function withdrawPoint(id, price, callback) {
     dbPool.logStatus();
     dbPool.getConnection(function(err, dbConn) {
         if (err) {
-          return callback(err);
+            return callback(err);
         }
 
         dbConn.query(sql_check_point, [id], function(err, results) {
@@ -1386,7 +1403,7 @@ function streamingMyProfile(id, callback) {
             }
             var filename =results[0].voiceMessage;
             console.log(filename);
-            results[0].fileurl = url.resolve('http://127.0.0.1:80', '/useravs/' +filename);
+            results[0].fileurl = url.resolve(process.env.HTTP_HOST, '/useravs/' +filename);
             callback(null, results[0]);
         })
     })
@@ -1409,7 +1426,7 @@ function streamingYourProfile(uid, callback) {
             }
             var filename =results[0].voiceMessage;
             console.log(filename);
-            results[0].fileurl = url.resolve('http://127.0.0.1:80', '/useravs/' +filename);
+            results[0].fileurl = url.resolve(process.env.HTTP_HOST, '/useravs/' +filename);
             callback(null, results[0]);
         })
     })

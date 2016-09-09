@@ -7,7 +7,7 @@ var timeZone = "Asia/Seoul";
 var logger = new winston.Logger({
   transports: [
     new winston.transports.Console({
-      level: 'info',
+      level: 'debug',
       silent: false,
       colorize: true,
       prettyPrint: true,

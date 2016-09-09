@@ -5,6 +5,7 @@ var moment = require('moment-timezone');
 
 // 나도 듣기 결제
 function payAnswerListening(listeningPay, callback) {
+
     dbPool.logStatus();
     dbPool.getConnection(function (err, dbConn) {
         dbConn.beginTransaction(function (err) {
@@ -98,6 +99,7 @@ function deleteAfterThreeday(id, answerId, callback) {
         future.day(); // 이거 작업할때는 +1 더하는거 아니다.
 
     var job = new CronJob(crontime, function () {
+
         dbPool.logStatus();
         dbPool.getConnection(function(err, dbConn) {
 
